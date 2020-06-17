@@ -25,13 +25,12 @@ def callback_locker(data):
 	global lock
 	global pa
 	global ma
-	if lock == False:
+	if data.data == 55:
+		lock = False
+		print('unlocked')
+	elif lock == False:
 		lock = True
-		pama = []
-		pama.append(pa)
-		pama.append(ma)
-		with open('poster.objects', 'wb') as storage:
-			pickle.dump(pama, storage)		
+		print('locked')		
 
 def callback(data):
 

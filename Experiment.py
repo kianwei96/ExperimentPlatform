@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import requests
 import curses
 from psychopy import core
@@ -21,9 +23,15 @@ with open('eparams.pkl','rb') as handle:
 
 # terminal display
 
+import os
+
 date_folder = exp_info["sessionDate"]
 shutil.move('eparams.pkl', date_folder + '/eparams.pkl')
-subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o posebag /amcl_pose /trigger_msgs __name:=my_bag'],shell=True)
+
+with open(os.devnull,'w') as fp:
+	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o posebag /amcl_pose /trigger_msgs __name:=my_bag'],shell=True,stdout=fp)
+	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o triggerbag /trigger_msgs __name:=my_bag2'],shell=True,stdout=fp)
+
 resolution = 0.025000 # meters per cell
 
 stdscr = curses.initscr()
@@ -57,7 +65,14 @@ inter_trial_interval = [exp_info["maze_ITI_Min"], exp_info["maze_ITI_Max"]]
 num_trials = 15
 num_trials = exp_info["maze_numberOfTrials"]
 
-poster_count = 6
+reward_map = exp_info["maze_rewardMap"]
+
+with open("RewardData/" + reward_map, 'r') as f:
+	reader = csv.reader(f)
+	poster_locations = list(reader)
+poster_locations = poster_locations[1:]	
+poster_count = len(poster_locations)
+print(poster_count)
 
 angle_tol = 90 # in degrees
 angle_tol = exp_info["maze_angleTolerance"]
@@ -68,7 +83,6 @@ pos_tol = exp_info["maze_positionTolerance"]
 dest_duration = 5
 dest_duration = exp_info["maze_destinationDuration"]
 
-reward_map = exp_info["maze_rewardMap"]
 
 # generating balanced, random reward sequence
 
@@ -103,7 +117,6 @@ targets = full_targets.tolist()
 
 # setting up communication methods
 
-last_known = [False, 0] # in the format: in target? + psychopy timestamp
 target_location = [0, 0]
 
 #print('ok')
@@ -118,26 +131,19 @@ def positionParser(data):
 		return
 
 	global master_timer
+	global zone_entered
 	dts = master_timer.getTime()
 
-	global last_known # [lasthit?, timestamp]
-	global dur_hit # in seconds
 	global target_location # [x, y]
 	global pos_saver # position for entire trial
 
 	pos_saver.append([dts, data.pose.pose.position.x, data.pose.pose.position.y, sum([i**2 for i in data.pose.covariance])])
 
-	if last_known[0] == True:
-		td = dts - last_known[1]
-		dur_hit = dur_hit + td	
 	if (target_location[0] - data.pose.pose.position.x)**2 + (target_location[1] - data.pose.pose.position.y)**2 < 1:		
-		hit = True
+		if zone_entered == -1:
+			zone_entered = master_timer.getTime()
 	else:
-		hit = False
-		dur_hit = 0 # need to be in the zone continuously
-
-	# print(dur_hit)
-	last_known = [hit, dts]
+		zone_entered = -1
 
 
 publisher = rospy.Publisher('trigger_msgs', Int16, queue_size=2)
@@ -155,10 +161,6 @@ try:
 	# initialization
 	stdscr.refresh()
 	stdscr.addstr(0, 0, "Poster sequence generated ... ")
-	with open("RewardData/" + reward_map, 'r') as f:
-		reader = csv.reader(f)
-		poster_locations = list(reader)
-	poster_locations = poster_locations[1:]	
 	master_log = []
 	master_log.append(["Marker", "Master Time"])
 	with open(date_folder + "/sessionTriggers.csv", 'w') as storage:
@@ -175,7 +177,6 @@ try:
 	status = "Normal"
 	phase = "Pre Trial Interval"
 	encoding_dict = {"Cue Up":10, "Movement":20, "Reward":30, "Penalty":40}
-	dur_hit = 0
 	pt = PointStamped()
 	pt.header.stamp = rospy.Time.now()
 	pt.header.frame_id = '/map'
@@ -185,6 +186,7 @@ try:
 	marker.publish(pt)
 	target_location = [pt.point.x, pt.point.y]
 	pos_saver = []
+	zone_entered = -1
 
 	while True:
 
@@ -193,9 +195,7 @@ try:
 		if phase == "Cue Up":
 			if mini_timer.getTime() > cue_duration:
 				phase = "Movement"
-				dur_hit = 0
-				last_known[1] = 0
-				last_known[0] = False
+				zone_entered = -1
 				message = Int16()
 				message.data = encoding_dict[phase]+targets[curr_target]+1
 				publisher.publish(message)
@@ -329,9 +329,9 @@ try:
 			phase = "Halted"				
 
 		# elif input == 32 and phase == "Movement": # space for dummy hit target
-		if dur_hit > dest_duration:		
+		if zone_entered > 0 and master_timer.getTime() - zone_entered > dest_duration:		
 			phase = "Reward"
-			dur_hit = 0
+			zone_entered = -1
 			message = Int16()
 			message.data = encoding_dict[phase]+targets[curr_target]+1
 			publisher.publish(message)
@@ -356,6 +356,14 @@ try:
 finally:
 
 	subprocess.call(['xterm','-e','cd ~/ExperimentPlatform && rosnode kill my_bag'])
+	subprocess.call(['xterm','-e','cd ~/ExperimentPlatform && rosnode kill my_bag2'])
+	with open(os.devnull,'w') as fp:
+		subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rostopic echo -b posebag*.bag -p /amcl_pose > rospose.csv'],shell=True,stdout=fp)
+	with open(os.devnull,'w') as fp:	
+		subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rostopic echo -b triggerbag*.bag -p /trigger_msgs > rostrig.csv'],shell=True,stdout=fp)
+	eos = Int16()
+	eos.data = 55
+	publisher.publish(eos)
 	curses.echo()
 	curses.nocbreak()
 	curses.endwin()

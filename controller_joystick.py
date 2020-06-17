@@ -203,7 +203,7 @@ class JoystickProcessor:
 
 def get_gui():
     initGUI = gui.Main()
-    settings = initGUI.get_settings()
+    settings = initGUI.get_settings(0)
     return settings
 
 def controllerCallback(data):

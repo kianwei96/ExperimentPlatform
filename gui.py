@@ -235,7 +235,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def load(self):
-        filters = "Settings files (*_settings.txt)"
+        filters = "Settings files (*.txt)"
         # TODO: Why is this not resolving symoblic links?
         #filename = QtGui.QFileDialog.getOpenFileName(self, "Load settings", os.getcwd(),filters)
         filename, _filer = QtWidgets.QFileDialog.getOpenFileName(self, "Load settings", os.getcwd(),filters)
@@ -348,7 +348,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
 
             #Maze
             #self.maze_rewardLocation.setText(str(exp_info.get("maze_rewardlocation", 3.0)))
-            self.maze_numberOfTrials.setText(str(exp_info.get("maze_numberOfTrials", 3.0)))
+	    self.maze_numberOfTrials.setText(str(exp_info.get("maze_numberOfTrials", 3.0)))
             self.maze_angleTolerance.setText(str(exp_info.get("maze_angleTolerance", 90)))
             self.maze_positionTolerance.setText(str(exp_info.get("maze_positionTolerance", 15)))
             self.maze_destinationDuration.setText(str(exp_info.get("maze_destinationDuration", 2.0)))
@@ -371,23 +371,26 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         filename = QtWidgets.QFileDialog.getSaveFileName(self, "Save settings", os.getcwd())
         
         if filename:
-            exp_info = self.get_settings()
-            json.dump(exp_info, open('/home/sinapse/ExperimentPlatform/GUIsaved_settings.txt',"w"))
+            exp_info = self.get_settings(0)
+            print(str(filename[0]))
+	    json.dump(exp_info, open(str(filename[0])+'.txt',"w"))
             #json.dump(exp_info, open(filename, "w"))
 
     def show_target_preview(self):
         exp_info = self.get_settings()
         main.target_preview(exp_info)
 
-    def get_settings(self):
+    def get_settings(self, final):
         
-	today = datetime.date.today()
-	d1 = today.strftime("%d%m%Y")
-	if not os.path.exists(d1):
-	    os.makedirs(d1)
-	else:
-	    shutil.rmtree(d1)
-	    os.makedirs(d1)
+        today = datetime.date.today()
+        d1 = today.strftime("%d%m%Y")
+
+	if final == 1:
+	    if not os.path.exists(d1):
+	        os.makedirs(d1)
+	    else:
+	        shutil.rmtree(d1)
+	        os.makedirs(d1)
 	
 	subject = str(self.subject.text())
         session = int(self.session.text())
@@ -502,120 +505,16 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
                     "platform_slowDownSpeed": platform_slowDownSpeed}
         return exp_info
 
-    def AMCL(self):
-        #Initialize function initialparam at AMCL_v5_GUI start experiment results in the location being gone.
-
-        def get_xy_loc(msg):
-                #declare them as global variable
-                global loc_x
-                global loc_y
-                global orien_z
-                global orien_w
-                global loc_x_rotate
-                global loc_y_rotate
-                global angle_current
-                 
-                #assign the subsribed position value x&y to loc_x and loc_y
-                loc_x=msg.pose.pose.position.x
-                loc_y=msg.pose.pose.position.y
-                orien_z=msg.pose.pose.orientation.z
-                orien_w=msg.pose.pose.orientation.w
-                    
-                print(loc_x,loc_y,orien_z)
-                   
-                #convert the coordinate system from generated map into the reward location map coordinate system
-                angle_rotate = -0 #in radiance, anticlockwise is positive
-                size_x_map = 1088 #in pixel 1728 no difference when changed 3328
-                size_y_map = 1088 #in pixel 1156 no difference when changed 1952
-                locs_x_map_origin = -12.2 #in meter   //map7.yaml parameters (-31.4)
-                locs_y_map_origin = -13.8 #in meter  //map7.yaml parameters (-23.4)
-                 
-                loc_x=(loc_x - locs_x_map_origin)/0.025
-                loc_y=(-locs_y_map_origin - loc_y)/0.025
-                    
-                loc_x_new=loc_x-(size_x_map/2)
-                loc_y_new=loc_y-(size_y_map/2)
-                    
-                loc_x_rotate=loc_x_new*(cos(angle_rotate))-loc_y_new*(sin(angle_rotate))+(size_x_map/2)
-                loc_y_rotate=loc_y_new*(cos(angle_rotate))+loc_x_new*(sin(angle_rotate))+(size_y_map/2)
-                    
-                if(orien_z>=0) & (orien_w>=0):
-                    angle_current=asin(orien_z)*2
-                    
-                elif (orien_z>0) & (orien_w<0):
-                    angle_current=2*pi-asin(orien_z)*2
-                    
-                elif (orien_z<0) & (orien_w>0):
-                    angle_current=2*pi+asin(orien_z)*2
-                          
-        exp_info = self.get_settings()
-
-        rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, get_xy_loc)
-
-        DegToRad = pi/180
-        loc_x=0
-        loc_y=0
-        LocationMap = '/home/sinapse/catkin_ws/maptest1.pgm'  #change map  
-        RewardLocationCSV = '/home/sinapse/Desktop/MonkeyGUI-master/RewardData/rewardlocations.csv'
-        orien_z=0
-        orien_w=0
-        loc_x_rotate=0
-        loc_y_rotate=0
-        current_orientation_w=0
-        current_orientation_z=0
-        angle_current=0
-        angle_desired=0
-      
-        frequency = 1100 # Hertz
-        # Define Experiment Parameters here
-        ExperimentNumber =2
-        ExperimentDate = '05042019'
-        MonkeyName = 'Chimpian'
-        Orientation=0
-        ExperimentFolder = '/home/sinapse/Desktop/MonkeyGUI-master/RewardData/'  # Main folder for saving related data
-        
-        # Create a folder to save Experiment related parameters
-        SaveDataFolder = os.path.join(ExperimentFolder, ExperimentDate, str(ExperimentNumber) + '_' + MonkeyName)
-        if not os.path.exists(SaveDataFolder):
-            os.makedirs(SaveDataFolder)
-
-        # Save Experiment parameters
-        saveAMCL = StartExperiment_amcl_v5_GUI.SaveExpParameters(SaveDataFolder, ExperimentNumber=ExperimentNumber, ExperimentDate=ExperimentDate, MonkeyName=MonkeyName, NumberOfTrials=exp_info.get("maze_numberOfTrials"), RewardTimeOut=exp_info.get("maze_trialDuration"))
-
-        rospy.init_node('robot_pose', anonymous=True)
-        print("NOT",exp_info.get("maze_numberOfTrials"))
-        print("TD", exp_info.get("maze_trialDuration"))
-        print("AT", exp_info.get("maze_angleTolerance"))
-        print("PT", exp_info.get("maze_positionTolerance"))
-        print("DD", exp_info.get("maze_destinationDuration"))
-	print(exp_info.get("maze_trialDuration"))
-        initAMCL = StartExperiment_amcl_v5_GUI.Experiment(exp_info.get("maze_numberOfTrials"), exp_info.get("maze_trialDuration"), Orientation, exp_info.get("maze_angleTolerance"), exp_info.get("maze_positionTolerance"), exp_info.get("maze_destinationDuration"), LocationMap, RewardLocationCSV, SaveDataFolder)
-
-    def maze_start(self):
-        exp_info = self.get_settings()
-        startAMCL = self.AMCL()
 
     def start(self):
-        exp_info = self.get_settings()
+        exp_info = self.get_settings(1)
         print "Starting experiment"
-        #self.results, status = main.run_experiment(exp_info, self.results)
         #dump info
 	with open('eparams.pkl','wb') as handle:
 		pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	#call exp
 	subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
-	#startAMCL = self.AMCL()
-	print "AMCL passed"
-        """
-	if len(status) > 1:
-            # Something happened
-            dlg = QtGui.QErrorMessage(self)
-            dlg.showMessage(status)
-        else:
-            if exp_info["calibrate"]:
-                # Safety check to avoid accidentally having to rel-calibrate
-                self.calibrate.setChecked(False)
-	"""
+	
 
 if __name__ == "__main__":
     import sys 
