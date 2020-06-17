@@ -14,7 +14,6 @@ from psychopy import core
 import pickle
 import shutil
 
-import pandas as pd
 import numpy as np
 import rospy
 from std_msgs.msg import Int16
