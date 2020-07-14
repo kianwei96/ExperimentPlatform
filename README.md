@@ -64,6 +64,7 @@ Experimental data will be stored in a folder named as the current date. A brief 
 
 ### For Developers
 
-Please refer to Wiki for breakdown of how the python scripts interact. Possible features and suggestions will also be listed there.
+Please refer to [Developer's Guide](../../wiki/Developer's-Guide)
+ for breakdown of how the python scripts interact. Possible features and suggestions will also be listed there.
 
 
