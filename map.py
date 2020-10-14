@@ -37,19 +37,20 @@ class OccupancyMap(object):
         self.resolution   = message.info.resolution
         self.mapWidth     = message.info.width
         self.mapHeight    = message.info.height
-        self.occupancyMap = np.reshape(np.asarray(message.data), (self.mapWidth, self.mapHeight))  
+        data = np.asarray(message.data)
+        self.occupancyMap = np.reshape(0.01 * np.where(data==-1, 0, data), (self.mapWidth, self.mapHeight))
         self.origin       = [message.info.origin.position.x, message.info.origin.position.y]
 
     def getIntepolationCoordinate(self, x, y):
         # output: x0, x1, y0, y1
-        x_temp = x - self.origin[0]
-        y_temp = y - self.origin[1]
-        x_c = x_temp/self.resolution
-        y_c = y_temp/self.resolution
+        x_c = x/self.resolution
+        y_c = y/self.resolution
         return int(math.floor(x_c))*self.resolution, int(math.ceil(x_c))*self.resolution, int(math.floor(y_c))*self.resolution, int(math.ceil(y_c))*self.resolution
 
     def getOccP(self, x, y):
-        return self.occupancyMap[int(round(x/self.resolution)), int(round(y/self.resolution))]
+        x_temp = int(round((x - self.origin[0])/self.resolution))
+        y_temp = int(round((y - self.origin[1])/self.resolution))
+        return self.occupancyMap[x_temp, y_temp]
 
 class LaserSubs(object):
     laser_coordinate = None
@@ -160,8 +161,8 @@ class PostProcessPose:
         matrix = np.sum(matrix, axis=0)
         #matrix now should have shape (1,3)
         hessianMatrix = self.compute_Hessian_Matrix(data)
-        # print(hessianMatrix)
-        result = np.dot(np.linalg.inv(hessianMatrix) , np.transpose(matrix) )
+        hessianMatrix = np.linalg.inv(hessianMatrix)
+        result = np.dot( hessianMatrix , np.transpose(matrix) )
         return result.flatten()
 
     def get_data_list(self, x_amcl, y_amcl, angle_amcl):
@@ -182,10 +183,11 @@ class PostProcessPose:
         y_orig = y
         angle_orig = angle
         if (self.poseArray.is_conversed()):
+            print("start iteration")
             iteration = 0
             while (iteration < self.num_iterations):
                 data  = self.get_data_list(x, y, angle)
-                print(data)
+                # print(data)
                 delta = self.computeDelta(data)
                 x += delta[0]
                 y += delta[1]
@@ -199,10 +201,11 @@ class PostProcessPose:
                 p.pose.pose.position.y = y
                 p.pose.pose.position.z = 0
                 quaternion = quaternion_from_euler(0, 0, angle)
-                p.pose.pose.quaternion.x = quaternion[0]
-                p.pose.pose.quaternion.y = quaternion[1]
-                p.pose.pose.quaternion.z = quaternion[2]
-                p.pose.pose.quaternion.w = quaternion[3]
+                p.pose.pose.orientation.x = quaternion[0]
+                p.pose.pose.orientation.y = quaternion[1]
+                p.pose.pose.orientation.z = quaternion[2]
+                p.pose.pose.orientation.w = quaternion[3]
+                p.pose.covariance = message.pose.covariance
                 print("Publish new pose")
                 self.pub.publish(p)
 
@@ -214,7 +217,7 @@ if __name__ == '__main__':
     # occcupancyMap = OccupancyMap()
     # poseArray = PoseArrayClass()
     # laserSubs = LaserSubs()
-    PostProcessPose(1, 3, 10)
+    PostProcessPose(1, 1, 50)
     rospy.spin()
 
 
