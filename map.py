@@ -43,9 +43,12 @@ class OccupancyMap(object):
 
     def getIntepolationCoordinate(self, x, y):
         # output: x0, x1, y0, y1
-        x_c = x/self.resolution
-        y_c = y/self.resolution
-        return int(math.floor(x_c))*self.resolution, int(math.ceil(x_c))*self.resolution, int(math.floor(y_c))*self.resolution, int(math.ceil(y_c))*self.resolution
+        x_c = (x - self.origin[0])/self.resolution
+        y_c = (y - self.origin[1])/self.resolution
+        if(np.max(np.asarray([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])) > 383):
+            print([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])
+        return (int(math.floor(x_c))*self.resolution + self.origin[0], int(math.ceil(x_c))*self.resolution + self.origin[0], 
+                int(math.floor(y_c))*self.resolution + self.origin[1], int(math.ceil(y_c))*self.resolution + self.origin[1])
 
     def getOccP(self, x, y):
         x_temp = int(round((x - self.origin[0])/self.resolution))
@@ -174,6 +177,10 @@ class PostProcessPose:
         angle_stack = np.repeat(np.asarray([[angle_amcl]]), num_points, axis=0)
         return np.hstack((angle_stack, laser_data, S))
 
+    def check_matching(self, data):
+        map_occupancy = np.asarray([self.compute_map_occupancy(d[3], d[4]) for d in data])
+        
+
     def callback(self, message):
         (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x, message.pose.pose.orientation.y, message.pose.pose.orientation.z, message.pose.pose.orientation.w])
         # print([roll, pitch, angle])
@@ -186,9 +193,11 @@ class PostProcessPose:
             print("start iteration")
             iteration = 0
             while (iteration < self.num_iterations):
+                print("iteration:" + str(iteration))
                 data  = self.get_data_list(x, y, angle)
                 # print(data)
                 delta = self.computeDelta(data)
+                print(delta)
                 x += delta[0]
                 y += delta[1]
                 angle += delta[2]
@@ -205,7 +214,7 @@ class PostProcessPose:
                 p.pose.pose.orientation.y = quaternion[1]
                 p.pose.pose.orientation.z = quaternion[2]
                 p.pose.pose.orientation.w = quaternion[3]
-                p.pose.covariance = message.pose.covariance
+                p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
                 print("Publish new pose")
                 self.pub.publish(p)
 
@@ -217,7 +226,7 @@ if __name__ == '__main__':
     # occcupancyMap = OccupancyMap()
     # poseArray = PoseArrayClass()
     # laserSubs = LaserSubs()
-    PostProcessPose(1, 1, 50)
+    PostProcessPose(1, 0.5, 1)
     rospy.spin()
 
 
