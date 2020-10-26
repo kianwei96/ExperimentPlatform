@@ -1,5 +1,4 @@
 import os
-import cv2
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,8 +44,8 @@ class OccupancyMap(object):
         # output: x0, x1, y0, y1
         x_c = (x - self.origin[0])/self.resolution
         y_c = (y - self.origin[1])/self.resolution
-        if(np.max(np.asarray([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])) > 383):
-            print([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])
+        # if(np.max(np.asarray([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])) > 383):
+            # print([int(math.floor(x_c)), int(math.ceil(x_c)), int(math.floor(y_c)), int(math.ceil(y_c))])
         return (int(math.floor(x_c))*self.resolution + self.origin[0], int(math.ceil(x_c))*self.resolution + self.origin[0], 
                 int(math.floor(y_c))*self.resolution + self.origin[1], int(math.ceil(y_c))*self.resolution + self.origin[1])
 
@@ -60,8 +59,8 @@ class LaserSubs(object):
     lp = lg.LaserProjection()
 
     def __init__(self):
-        # rospy.Subscriber('/base_scan', LaserScan, self.LaserData)
-        rospy.Subscriber('scan', LaserScan, self.callback)
+        rospy.Subscriber('/base_scan', LaserScan, self.callback)
+        # rospy.Subscriber('scan', LaserScan, self.callback)
 
     def callback(self,msg):
         pc2_msg = self.lp.projectLaser(msg)
@@ -83,12 +82,13 @@ class PoseArrayClass(object):
         poses = message.poses
         poses = [[poses[i].position.x, poses[i].position.y, poses[i].position.z, poses[i].orientation.x, poses[i].orientation.y, poses[i].orientation.z, poses[i].orientation.w] for i in range(len(poses))]
         self.poses = np.asarray(poses)
+        # print(self.poses)
         # print("PoseArray callback")
 
     def is_conversed(self):
         # unsure how to define convergence, currently using std of position
-        # print(np.max(np.std(self.poses[:, :3], axis=1)))
-        return np.max(np.std(self.poses[:, :3], axis=1)) < self.radius
+        # print(np.std(self.poses[:, :3], axis=0))
+        return np.max(np.std(self.poses[:, :3], axis=0)) < self.radius
 
 class PostProcessPose:
     def __init__(self, pose_array_radius, threshold_radius, num_iterations):
@@ -193,11 +193,10 @@ class PostProcessPose:
             print("start iteration")
             iteration = 0
             while (iteration < self.num_iterations):
-                print("iteration:" + str(iteration))
+                # print("iteration:" + str(iteration))
                 data  = self.get_data_list(x, y, angle)
                 # print(data)
-                delta = self.computeDelta(data)
-                print(delta)
+                delta = self.computeDelta(data)                
                 x += delta[0]
                 y += delta[1]
                 angle += delta[2]
@@ -216,6 +215,8 @@ class PostProcessPose:
                 p.pose.pose.orientation.w = quaternion[3]
                 p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
                 print("Publish new pose")
+                print(delta)
+                print(p)
                 self.pub.publish(p)
 
 
@@ -226,7 +227,7 @@ if __name__ == '__main__':
     # occcupancyMap = OccupancyMap()
     # poseArray = PoseArrayClass()
     # laserSubs = LaserSubs()
-    PostProcessPose(1, 0.5, 1)
+    PostProcessPose(0.1, 0.5, 1)
     rospy.spin()
 
 
