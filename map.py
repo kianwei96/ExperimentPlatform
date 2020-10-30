@@ -193,14 +193,15 @@ class PostProcessPose:
             print("start iteration")
             iteration = 0
             while (iteration < self.num_iterations):
-                # print("iteration:" + str(iteration))
+                print("iteration:" + str(iteration))
                 data  = self.get_data_list(x, y, angle)
-                # print(data)
-                delta = self.computeDelta(data)                
+                delta = self.computeDelta(data)   
                 x += delta[0]
                 y += delta[1]
                 angle += delta[2]
                 iteration += 1
+                if (math.sqrt((x-x_orig)*(x-x_orig) + (y-y_orig)*(y-y_orig)) < self.threshold_radius):
+                    break
             if (math.sqrt((x-x_orig)*(x-x_orig) + (y-y_orig)*(y-y_orig)) < self.threshold_radius):
                 p = PoseWithCovarianceStamped()
                 p.header.stamp = rospy.get_rostime()
@@ -215,8 +216,7 @@ class PostProcessPose:
                 p.pose.pose.orientation.w = quaternion[3]
                 p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
                 print("Publish new pose")
-                print(delta)
-                print(p)
+                # print(p)
                 self.pub.publish(p)
 
 
@@ -227,7 +227,7 @@ if __name__ == '__main__':
     # occcupancyMap = OccupancyMap()
     # poseArray = PoseArrayClass()
     # laserSubs = LaserSubs()
-    PostProcessPose(0.1, 0.5, 1)
+    PostProcessPose(0.1, 0.2, 5)
     rospy.spin()
 
 
