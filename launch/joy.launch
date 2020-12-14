@@ -1,0 +1,15 @@
+<launch>	
+	<node pkg="joy" type="joy_node" name="joystick" output="screen">
+		<param name="dev" value="/dev/input/ttyACM1" />
+	</node>
+	
+	<node pkg="yardbot" type="teleop_joy_node" name="teleop" output="screen">
+		<remap from="/cmd_vel" to="/RosAria/cmd_vel" />
+		
+		<param name="linear_scale" value="4" />
+		<param name="angular_scale" value="3.14159" />
+		<param name="deadman_button" value="11" />
+		<param name="linear_axis" value="1" />
+		<param name="angular_axis" value="0" />
+	</node>
+</launch>
