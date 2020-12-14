@@ -382,7 +382,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
     def get_settings(self, final):
         
         today = datetime.date.today()
-        d1 = today.strftime("%d%m%Y")
+        d1 = today.strftime("%Y%m%d")
 
 	if final == 1:
 	    if not os.path.exists(d1):
