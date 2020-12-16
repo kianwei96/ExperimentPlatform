@@ -63,9 +63,12 @@ class LaserSubs(object):
         # rospy.Subscriber('scan', LaserScan, self.callback)
 
     def callback(self,msg):
-        pc2_msg = self.lp.projectLaser(msg)
-        point_generator = pc2.read_points_list(pc2_msg)
-        self.laser_coordinate = np.asarray(point_generator)[:, :2]
+        global LOCK
+        if (not LOCK):
+            pc2_msg = self.lp.projectLaser(msg)
+            point_generator = pc2.read_points_list(pc2_msg)
+            self.laser_coordinate = np.asarray(point_generator)[:, :2]
+
     
     def get_laser_data(self):
         return self.laser_coordinate
@@ -92,6 +95,8 @@ class PoseArrayClass(object):
 
 class PostProcessPose:
     def __init__(self, pose_array_radius, threshold_radius, num_iterations):
+        global LOCK
+        LOCK = False
         self.occupancyMap = OccupancyMap()
         self.laserSubs    = LaserSubs()
         self.poseArray    = PoseArrayClass(pose_array_radius)
@@ -182,42 +187,56 @@ class PostProcessPose:
         
 
     def callback(self, message):
-        (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x, message.pose.pose.orientation.y, message.pose.pose.orientation.z, message.pose.pose.orientation.w])
-        # print([roll, pitch, angle])
-        x = message.pose.pose.position.x
-        y = message.pose.pose.position.y
-        x_orig = x
-        y_orig = y
-        angle_orig = angle
-        if (self.poseArray.is_conversed()):
-            print("start iteration")
-            iteration = 0
-            while (iteration < self.num_iterations):
-                print("iteration:" + str(iteration))
-                data  = self.get_data_list(x, y, angle)
-                delta = self.computeDelta(data)   
-                x += delta[0]
-                y += delta[1]
-                angle += delta[2]
-                iteration += 1
-                if (math.sqrt((x-x_orig)*(x-x_orig) + (y-y_orig)*(y-y_orig)) < self.threshold_radius):
-                    break
-            if (math.sqrt((x-x_orig)*(x-x_orig) + (y-y_orig)*(y-y_orig)) < self.threshold_radius):
-                p = PoseWithCovarianceStamped()
-                p.header.stamp = rospy.get_rostime()
-                p.header.frame_id = "map"
-                p.pose.pose.position.x = x
-                p.pose.pose.position.y = y
-                p.pose.pose.position.z = 0
-                quaternion = quaternion_from_euler(0, 0, angle)
-                p.pose.pose.orientation.x = quaternion[0]
-                p.pose.pose.orientation.y = quaternion[1]
-                p.pose.pose.orientation.z = quaternion[2]
-                p.pose.pose.orientation.w = quaternion[3]
-                p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
-                print("Publish new pose")
-                # print(p)
-                self.pub.publish(p)
+        check_condition = lambda (x,y,angle,x0,y0,angle0):
+            (math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0)) < self.threshold_radius) and \
+            math.abs(angle - angle0) < math.pi / 6
+        global LOCK
+        try: 
+            (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x, message.pose.pose.orientation.y, message.pose.pose.orientation.z, message.pose.pose.orientation.w])
+            # print([roll, pitch, angle])
+            x = message.pose.pose.position.x
+            y = message.pose.pose.position.y
+            x_orig = x
+            y_orig = y
+            angle_orig = angle
+            if (self.poseArray.is_conversed()):
+                print("start iteration")
+                iteration = 0
+                while (iteration < self.num_iterations):
+                    LOCK = True
+                    # print("iteration:" + str(iteration))
+                    data  = self.get_data_list(x, y, angle)
+                    delta = self.computeDelta(data)   
+                    x += delta[0]
+                    y += delta[1]
+                    angle += delta[2]
+                    iteration += 1
+                    LOCK = False
+                    if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
+                        break
+                if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
+                    p = PoseWithCovarianceStamped()
+                    p.header.stamp = rospy.get_rostime()
+                    p.header.frame_id = "map"
+                    p.pose.pose.position.x = x
+                    p.pose.pose.position.y = y
+                    p.pose.pose.position.z = 0
+                    quaternion = quaternion_from_euler(0, 0, angle)
+                    p.pose.pose.orientation.x = quaternion[0]
+                    p.pose.pose.orientation.y = quaternion[1]
+                    p.pose.pose.orientation.z = quaternion[2]
+                    p.pose.pose.orientation.w = quaternion[3]
+                    p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
+                    print("Publish new pose at iteration", iteration)
+                    # print(p)
+                    self.pub.publish(p)
+                else:
+                    print("No pose published, more than num_iterations")
+        except Exception as e:
+            print("Failed!:", e)
+        finally:
+            LOCK = False
+
 
 
 if __name__ == '__main__':
