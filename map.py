@@ -78,7 +78,6 @@ class PoseArrayClass(object):
     poses = np.zeros((7,2))
     def __init__(self, radius = 0.0):
         rospy.Subscriber("particlecloud", PoseArray, callback=self.callback)
-        # rospy.Subscriber("Pose_Array?", PoseArray, callback=self.calllback)
         self.radius = radius
     
     def callback(self, message):
@@ -103,7 +102,7 @@ class PostProcessPose:
         self.num_iterations = num_iterations
         self.threshold_radius = threshold_radius
         rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, callback=self.callback)
-        self.pub = rospy.Publisher("initialpose", PoseWithCovarianceStamped)
+        self.pub = rospy.Publisher("initialpose", PoseWithCovarianceStamped, queue_size=1)
     
     
     def derivative_of_location(self, angle, x, y):
@@ -187,10 +186,13 @@ class PostProcessPose:
         
 
     def callback(self, message):
-        check_condition = lambda (x,y,angle,x0,y0,angle0):
-            (math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0)) < self.threshold_radius) and \
-            math.abs(angle - angle0) < math.pi / 6
-        global LOCK
+        # self.publishPose = False
+        convert_angle = lambda angle: angle - angle//(2*math.pi)*(2*math.pi)            
+        check_condition = lambda x,y,angle,x0,y0,angle0: \
+            (math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0)) < self.threshold_radius) \
+            and math.fabs(angle  - angle0) < math.pi / 6
+        # global LOCK
+        # LOCK = False
         try: 
             (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x, message.pose.pose.orientation.y, message.pose.pose.orientation.z, message.pose.pose.orientation.w])
             # print([roll, pitch, angle])
@@ -203,15 +205,15 @@ class PostProcessPose:
                 print("start iteration")
                 iteration = 0
                 while (iteration < self.num_iterations):
-                    LOCK = True
+                    # LOCK = True
                     # print("iteration:" + str(iteration))
                     data  = self.get_data_list(x, y, angle)
                     delta = self.computeDelta(data)   
                     x += delta[0]
                     y += delta[1]
-                    angle += delta[2]
+                    angle = convert_angle(angle + delta[2])
                     iteration += 1
-                    LOCK = False
+                    # LOCK = False
                     if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
                         break
                 if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
@@ -228,14 +230,14 @@ class PostProcessPose:
                     p.pose.pose.orientation.w = quaternion[3]
                     p.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
                     print("Publish new pose at iteration", iteration)
-                    # print(p)
                     self.pub.publish(p)
                 else:
                     print("No pose published, more than num_iterations")
         except Exception as e:
             print("Failed!:", e)
-        finally:
-            LOCK = False
+        # finally:
+        #     LOCK = False
+
 
 
 
