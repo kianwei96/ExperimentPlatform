@@ -92,7 +92,7 @@ class PoseArrayClass(object):
         # print(np.std(self.poses[:, :3], axis=0))
         return np.max(np.std(self.poses[:, :3], axis=0)) < self.radius
 
-class PostProcessPose:
+class PostProcessPose(object):
     def __init__(self, pose_array_radius, threshold_radius, num_iterations):
         global LOCK
         LOCK = False
