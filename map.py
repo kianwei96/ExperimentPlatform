@@ -71,7 +71,7 @@ class LaserSubs(object):
 
     
     def get_laser_data(self):
-        return self.laser_coordinate
+        return np.copy(self.laser_coordinate)
 
 class PoseArrayClass(object):
     # (x, y, z, x, y, z, w) position and quaternion
@@ -103,6 +103,7 @@ class PostProcessPose:
         self.threshold_radius = threshold_radius
         rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, callback=self.callback)
         self.pub = rospy.Publisher("initialpose", PoseWithCovarianceStamped, queue_size=1)
+        self.skip = 0
     
     
     def derivative_of_location(self, angle, x, y):
@@ -186,7 +187,10 @@ class PostProcessPose:
         
 
     def callback(self, message):
-        # self.publishPose = False
+        # self.skip = (self.skip + 1)% 3
+        # if self.skip != 0:
+        #     return
+
         convert_angle = lambda angle: angle - angle//(2*math.pi)*(2*math.pi)            
         check_condition = lambda x,y,angle,x0,y0,angle0: \
             (math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0)) < self.threshold_radius) \
@@ -194,7 +198,10 @@ class PostProcessPose:
         # global LOCK
         # LOCK = False
         try: 
-            (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x, message.pose.pose.orientation.y, message.pose.pose.orientation.z, message.pose.pose.orientation.w])
+            (roll, pitch, angle) = euler_from_quaternion([message.pose.pose.orientation.x,
+                                                          message.pose.pose.orientation.y, 
+                                                          message.pose.pose.orientation.z, 
+                                                          message.pose.pose.orientation.w])
             # print([roll, pitch, angle])
             x = message.pose.pose.position.x
             y = message.pose.pose.position.y
@@ -203,6 +210,7 @@ class PostProcessPose:
             angle_orig = angle
             if (self.poseArray.is_conversed()):
                 print("start iteration")
+                print(x,y,angle)
                 iteration = 0
                 while (iteration < self.num_iterations):
                     # LOCK = True
@@ -217,6 +225,7 @@ class PostProcessPose:
                     if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
                         break
                 if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
+                    print(x,y,angle)
                     p = PoseWithCovarianceStamped()
                     p.header.stamp = rospy.get_rostime()
                     p.header.frame_id = "map"
