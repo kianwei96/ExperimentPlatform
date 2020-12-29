@@ -31,7 +31,7 @@ from map import PostProcessPose
 class PostProcessPoseWrapper(PostProcessPose):
     def __init__(self):
         super(PostProcessPoseWrapper, self ).__init__(0.1, 0.2, 5)
-        self.currentPosition = {"x": 0, "y": 0, "angle": 0}
+        self.currentPosition = {"x": 0, "y": 0, "angle": 0, 'sampleTime': 0}
 
     def callback(self, message):
         super(PostProcessPoseWrapper, self).callback(message)
@@ -42,47 +42,67 @@ class PostProcessPoseWrapper(PostProcessPose):
         self.currentPosition.angle = angle
         self.currentPosition.x     = message.pose.pose.position.x
         self.currentPosition.y     = message.pose.pose.position.y
-        print(self.currentPosition)
+        # print(self.currentPosition)
+        self.currentPosition.sampleTime = message.header.stamp['nsecs']
 
     def get_current_position(self):
         return self.currentPosition
 
 
 class BaseTestStrategy(object):
-    def __init__(self, delay_resample_time):
+    def __init__(self, postProscessPoseObject):
         self.testResultPublisher = rospy.Publisher("test_result", String, queue_size=5)
-        self.delay_resample_time = delay_resample_time
+        self.postProscessPoseObject = postProscessPoseObject
 
     @abc.abstractmethod
     def loop_looking_for_signal(self):
         pass
 
-    def publish_result(self, currentPosition, targetPosition, is_delayed_result = False):
-        if (is_delayed_result):
-            is_delayed_result = 1
-        else:
-            is_delayed_result = 0
-        message = "%s, %f, %f, %f, %f, %f, %f, %d" % (rospy.get_time(), currentPosition.x, currentPosition.y, currentPosition.angle, \
-                                                        targetPosition.x, targetPosition.y, targetPosition.angle, is_delayed_result)
+    @abc.abstractmethod
+    def change_to_next_target(self, currentTargetPosition):
+        pass
+
+    def publish_result(self, currentPosition, targetPosition):
+        message = "%f, %f, %f, %f, %f, %f, %f, %f" % (rospy.get_time(), currentPosition.sampleTime, \
+                                                      currentPosition.x, currentPosition.y, currentPosition.angle, \
+                                                      targetPosition.x, targetPosition.y, targetPosition.angle)
         self.testResultPublisher.publish(message)
 
 
 class JoyTestStrategy(BaseTestStrategy):
-    def __init__(self, delay_resample_time):
-        super(JoyTestStrategy, self).__init__(delay_resample_time)
+    def __init__(self, postProscessPoseObject, numTargets):
+        super(JoyTestStrategy, self).__init__(postProscessPoseObject)
+        self.is_sampled = False
+        self.targetPosition  = 0
+        self.targetPositions =  [] #{"x": 0, "y": 0, "angle": 0}
+        self.numTargets = numTargets
+        self.isTargetIndexIncrease = True
 
     def loop_looking_for_signal(self):
         rospy.Subscriber("joy", Joy, self.joy_callback)
 
     def joy_callback(self, message):
-        pass
+        if (int(message.buttons[0]) == 1): #capture a sample
+            self.publish_result(self.postProscessPoseObject.currentPosition, self.targetPositions[self.targetPosition])
+        if (int(message.buttons[1] == 1)):
+            self.change_to_next_target(self.targetPosition)
 
+    def change_to_next_target(currentTargetPosition):
+        if (self.isTargetIndexIncrease):
+            self.targetPosition = currentTargetPosition + 1
+        else: 
+            self.targetPosition = currentTargetPosition - 1
+        if (self.targetPosition == 0 or self.targetPosition == self.numTargets):
+            self.isTargetIndexIncrease = not self.isTargetIndexIncrease 
 
 class KeyTestStrategy(BaseTestStrategy):
-    def __init__(self, delay_resample_time):
-        super(JoyTestStrategy, self).__init__(delay_resample_time)
+    def __init__(self, postProscessPoseObject):
+        super(JoyTestStrategy, self).__init__(postProscessPoseObject)
 
     def loop_looking_for_signal(self):
+        pass
+
+    def change_to_next_target(self, currentTargetPosition):
         pass
 
 class SamplingEvent(object):
@@ -99,4 +119,5 @@ class SamplingEvent(object):
         pass
 
 if __name__ == "__main__":
-    PostProcessPoseWrapper().callback("")  
+    test = JoyTestStrategy(PostProcessPoseWrapper(), 10)
+    ros.spin()
