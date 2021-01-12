@@ -63,8 +63,8 @@ class LaserSubs(object):
         # rospy.Subscriber('scan', LaserScan, self.callback)
 
     def callback(self,msg):
-        global LOCK
-        if (not LOCK):
+        # global LOCK
+        # if (not LOCK):
             pc2_msg = self.lp.projectLaser(msg)
             point_generator = pc2.read_points_list(pc2_msg)
             self.laser_coordinate = np.asarray(point_generator)[:, :2]
@@ -210,7 +210,6 @@ class PostProcessPose(object):
             angle_orig = angle
             if (self.poseArray.is_conversed()):
                 print("start iteration")
-                print(x,y,angle)
                 iteration = 0
                 while (iteration < self.num_iterations):
                     # LOCK = True
