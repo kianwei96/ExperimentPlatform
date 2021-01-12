@@ -77,7 +77,7 @@ class JoyTestStrategy(BaseTestStrategy):
         self.targetPositions =  [] #{"x": 0, "y": 0, "angle": 0}
 
     def loop_looking_for_signal(self):
-        self.targetPositions = [{"x": x[0], "y": x[1], "angle": x[2]} for x in np.loadtxt("target.txt")]
+        self.targetPositions = [{"x": x[1], "y": x[2], "angle": x[0]} for x in np.loadtxt("target.txt")]
         print(self.targetPositions)
         rospy.Subscriber("joy", Joy, self.joy_callback, queue_size=1)
 
