@@ -23,6 +23,12 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import time
 import os
 
+# convert angle to -180 180 range
+def convert_angle(angle):
+    c_angle = angle - angle//(2*math.pi)*(2*math.pi)
+    if (c_angle > math.pi):
+        c_angle = c_angle - 2*math.pi
+
 class OccupancyMap(object):
     occupancyMap = np.zeros((2,2))
     def __init__(self):
@@ -190,8 +196,7 @@ class PostProcessPose(object):
         # self.skip = (self.skip + 1)% 3
         # if self.skip != 0:
         #     return
-
-        convert_angle = lambda angle: angle - angle//(2*math.pi)*(2*math.pi)            
+            
         check_condition = lambda x,y,angle,x0,y0,angle0: \
             (math.sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0)) < self.threshold_radius) \
             and math.fabs(angle  - angle0) < math.pi / 6
