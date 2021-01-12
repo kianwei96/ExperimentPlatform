@@ -223,7 +223,7 @@ class PostProcessPose(object):
                     delta = self.computeDelta(data)   
                     x += delta[0]
                     y += delta[1]
-                    angle = convert_angle(angle + delta[2])
+                    angle = angle + delta[2] #convert_angle(angle + delta[2])
                     iteration += 1
                     # LOCK = False
                     if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
