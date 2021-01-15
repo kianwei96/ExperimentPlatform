@@ -28,6 +28,7 @@ def convert_angle(angle):
     c_angle = angle - angle//(2*math.pi)*(2*math.pi)
     if (c_angle > math.pi):
         c_angle = c_angle - 2*math.pi
+    return c_angle
 
 class OccupancyMap(object):
     occupancyMap = np.zeros((2,2))
@@ -107,7 +108,7 @@ class PostProcessPose(object):
         self.poseArray    = PoseArrayClass(pose_array_radius)
         self.num_iterations = num_iterations
         self.threshold_radius = threshold_radius
-        rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, callback=self.callback)
+        rospy.Subscriber("amcl_pose", PoseWithCovarianceStamped, callback=self.callback, queue_size=1)
         self.pub = rospy.Publisher("initialpose", PoseWithCovarianceStamped, queue_size=1)
         self.skip = 0
     
@@ -223,7 +224,7 @@ class PostProcessPose(object):
                     delta = self.computeDelta(data)   
                     x += delta[0]
                     y += delta[1]
-                    angle = angle + delta[2] #convert_angle(angle + delta[2])
+                    angle = convert_angle(angle + delta[2])
                     iteration += 1
                     # LOCK = False
                     if (check_condition(x,y,angle, x_orig, y_orig, angle_orig)):
