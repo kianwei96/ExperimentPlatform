@@ -125,38 +125,38 @@ target_location = [0, 0]
 Check if alpha is between theta and beta (all in degrees)
 '''
 def is_angle_between(alpha, theta, beta):
-	while( math.fabs(beta - alpha) > 180 ):
-		if(beta > alpha):
-			alpha += 360
-		else:
-			beta += 360
+    while( math.fabs(beta - alpha) > 180 ):
+        if(beta > alpha):
+            alpha += 360
+        else:
+            beta += 360
 
 
-	# Here I replace alpha with beta if alpha is bigger to keep things consistent
-	# You can choose the bigger angle however you please
-	if(alpha > beta):
-    	phi = alpha
-		alpha = beta
-		beta = phi
+    # Here I replace alpha with beta if alpha is bigger to keep things consistent
+    # You can choose the bigger angle however you please
+    if(alpha > beta):
+        phi = alpha
+        alpha = beta
+        beta = phi
 
-	threeSixtyMultiple = (beta - theta)//360;
-	theta += 360*threeSixtyMultiple;
+    threeSixtyMultiple = (beta - theta)//360;
+    theta += 360*threeSixtyMultiple;
 
-	return (alpha < theta) and (theta < beta)
+    return (alpha < theta) and (theta < beta)
 
 def reached_target_location(data):
     (roll, pitch, angle) = euler_from_quaternion([data.pose.pose.orientation.x,
                                                   data.pose.pose.orientation.y, 
                                                   data.pose.pose.orientation.z, 
                                                   data.pose.pose.orientation.w])
-	angle = math.degrees(angle)
+    angle = math.degrees(angle)
     x = data.pose.pose.position.x
-	y = data.pose.pose.position.y
+    y = data.pose.pose.position.y
     has_reached_position =  (target_location[0] - x)**2 + \
-					 	    (target_location[1] - y)**2 < (pos_tol/100)**2 # to meters
-	target_a = math.degrees(math.atan((target_location[1]-y)/(target_location[0]-x)))
-	has_faced_target = is_angle_between(target_a, angle + angle_tol, angle - angle_tol)
-	return has_reached_position and has_faced_target
+                            (target_location[1] - y)**2 < (pos_tol/100)**2 # to meters
+    target_a = math.degrees(math.atan((target_location[1]-y)/(target_location[0]-x)))
+    has_faced_target = is_angle_between(target_a, angle + angle_tol, angle - angle_tol)
+    return has_reached_position and has_faced_target
 
 def positionParser(data):
 	
