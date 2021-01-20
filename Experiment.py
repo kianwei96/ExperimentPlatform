@@ -119,7 +119,7 @@ targets = full_targets.tolist()
 
 # setting up communication methods
 
-target_location = [0, 0]
+target_location = [0, 0, 0]
 
 '''
 Check if alpha is between theta and beta (all in degrees)
@@ -140,7 +140,7 @@ def is_angle_between(alpha, theta, beta):
         beta = phi
 
     threeSixtyMultiple = (beta - theta)//360;
-    theta += 360*threeSixtyMultiple;
+    theta += 360*threeSixtyMultiple
 
     return (alpha < theta) and (theta < beta)
 
@@ -154,8 +154,11 @@ def reached_target_location(data):
     y = data.pose.pose.position.y
     has_reached_position =  (target_location[0] - x)**2 + \
                             (target_location[1] - y)**2 < (pos_tol/100)**2 # to meters
-    target_a = math.degrees(math.atan((target_location[1]-y)/(target_location[0]-x)))
-    has_faced_target = is_angle_between(target_a, angle + angle_tol, angle - angle_tol)
+    convert_angle = lambda angle: angle - angle//(360)*(360)
+    target_a = math.degrees(math.atan2((target_location[1]-y),(target_location[0]-x)))
+    has_faced_target = is_angle_between(convert_angle(angle - angle_tol),
+    									convert_angle(math.degrees(target_location[2]))+180,
+    									convert_angle(angle + angle_tol))
     return has_reached_position and has_faced_target
 
 def positionParser(data):
@@ -221,7 +224,7 @@ try:
 	pt.point.y = float(poster_locations[targets[curr_target]][1])
 	pt.point.z = 0
 	marker.publish(pt)
-	target_location = [pt.point.x, pt.point.y]
+	target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 	pos_saver = []
 	zone_entered = -1
 
@@ -270,7 +273,7 @@ try:
 				pt.point.y = float(poster_locations[targets[curr_target]][1])
 				pt.point.z = 0
 				marker.publish(pt)
-				target_location = [pt.point.x, pt.point.y]
+				target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 				mini_timer = core.MonotonicClock()
 				if status == "Pausing":
 					status = "Paused"
@@ -314,7 +317,7 @@ try:
 					pt.point.y = float(poster_locations[targets[curr_target]][1])
 					pt.point.z = 0
 					marker.publish(pt)
-					target_location = [pt.point.x, pt.point.y]
+					target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 					mini_timer = core.MonotonicClock()
 					if status == "Pausing":
 						status = "Paused"
@@ -329,7 +332,7 @@ try:
 				pt.point.y = float(poster_locations[targets[curr_target]][1])
 				pt.point.z = 0
 				marker.publish(pt)
-				target_location = [pt.point.x, pt.point.y]
+				target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 			if mini_timer.getTime() > inter_trial_duration:
 				phase = "Cue Up"
 				message = Int16()
