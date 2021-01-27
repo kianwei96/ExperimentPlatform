@@ -24,6 +24,7 @@ from std_msgs.msg import Int16
 from sensor_msgs.msg import Joy
 import time
 import os
+import pickle
 
 class LaserSubs(object):
     laser_ranges = 0
@@ -50,7 +51,7 @@ class LaserSubs(object):
                     time.sleep(0.05)
 
 
-class LidarProcessor:
+class LidarProcessor(object):
     dist_slow = 0
     dist_stop = 0
 
@@ -127,7 +128,7 @@ class LidarProcessor:
         return sum(values) / len(values)
 
 
-class JoystickProcessor:
+class JoystickProcessor(object):
     speed_slow = 0
     speed_fast = 0
 
@@ -201,8 +202,8 @@ class JoystickProcessor:
         return twist
 
 def get_gui():
-    initGUI = gui.Main()
-    settings = initGUI.get_settings(0)
+    with open('eparams.pkl','rb') as handle:
+	    settings = pickle.load(handle)
     return settings
 
 def controllerCallback(data):
