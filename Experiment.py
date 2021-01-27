@@ -34,8 +34,6 @@ with open(os.devnull,'w') as fp:
 	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o posebag /amcl_pose /trigger_msgs __name:=my_bag'],shell=True,stdout=fp)
 	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o triggerbag /trigger_msgs __name:=my_bag2'],shell=True,stdout=fp)
 
-resolution = 0.025000 # meters per cell
-
 stdscr = curses.initscr()
 curses.noecho()
 curses.cbreak()

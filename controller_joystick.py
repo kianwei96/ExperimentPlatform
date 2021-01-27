@@ -113,7 +113,7 @@ class LidarProcessor(object):
             flag = 3
         else:
             flag = 2
-	flag = 2
+	# flag = 2
         return flag
 
     @staticmethod

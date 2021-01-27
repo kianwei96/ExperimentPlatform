@@ -512,13 +512,13 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
 	with open('eparams.pkl','wb') as handle:
 		pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	#call exp
-        subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python controller_joystick.py'])
+        global controller_joystick_node
+        controller_joystick_node = subprocess.Popen(['cd ~/ExperimentPlatform && python controller_joystick.py'], shell = True)
 	subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
 	
 
 if __name__ == "__main__":
     import sys 
-
     app = QtWidgets.QApplication(sys.argv)
     myapp = Main()
     myapp.show()
