@@ -512,6 +512,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
 	with open('eparams.pkl','wb') as handle:
 		pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	#call exp
+        subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python controller_joystick.py'])
 	subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
 	
 
