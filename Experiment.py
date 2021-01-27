@@ -159,6 +159,7 @@ def reached_target_location(data):
     has_faced_target = is_angle_between(convert_angle(angle - angle_tol),
     									convert_angle(math.degrees(target_location[2]))+180,
     									convert_angle(angle + angle_tol))
+    print(has_reached_position, has_faced_target)
     return has_reached_position and has_faced_target
 
 def positionParser(data):

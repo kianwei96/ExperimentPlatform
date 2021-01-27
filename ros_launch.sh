@@ -10,4 +10,5 @@ sleep 2; xterm -iconic -hold -e "cd ~/ExperimentPlatform/launch; roslaunch AMCL.
 sleep 2; xterm -iconic -hold -e "cd ~/ExperimentPlatform/launch; rostopic echo /amcl_pose"&
 sleep 2; xterm -iconic -hold -e "cd ~/ExperimentPlatform/launch; rosrun joy joy_node _autorepeat_rate:=10"&
 sleep 2; xterm -iconic -hold -e "cd ~/ExperimentPlatform/launch; rostopic echo joy"
+sleep 2; xterm -iconic -hold -e "cd ~/ExperimentPlatform/; python map.py"
 #sleep 10; xterm -hold -e "cd catkin_ws; rosrun teleop_twist_joy joy_teleop.py"
