@@ -103,7 +103,7 @@ while len(full_targets) < num_trials:
 	reward_sequence = np.arange(poster_count)
 	reward_sequence = np.squeeze(np.transpose(np.matlib.repmat(reward_sequence, 1, 5)))
 	while True:
-    		np.random.shuffle(reward_sequence)
+		np.random.shuffle(reward_sequence)
 		evaluation = np.diff(np.transpose(reward_sequence)) == 0
 		if not evaluation.any():
 			break

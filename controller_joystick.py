@@ -5,26 +5,20 @@ import os
 import cv2
 import csv
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import animation
-from matplotlib.animation import FuncAnimation
-from psychopy import core
 import sys
-import xlwt
-from copy import copy
 from math import cos, sin, atan, asin, pi
-from PyQt5 import QtCore, QtGui, QtWidgets
 import gui
 
 import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, String
 from sensor_msgs.msg import Joy
 import time
 import os
 import pickle
+import json
 
 class LaserSubs(object):
     laser_ranges = 0
@@ -78,16 +72,16 @@ class LidarProcessor(object):
         print("dist slow:", self.dist_slow)
 
     def update_distance(self):
-            # print (self.laser_subs_object)
-            dist_r = self.calc_avg(self.laser_subs_object.laser_ranges[0:193])
-            dist_fr = self.calc_avg(self.laser_subs_object.laser_ranges[193:386])
-            dist_f = self.calc_avg(self.laser_subs_object.laser_ranges[386:579])
-            dist_fl = self.calc_avg(self.laser_subs_object.laser_ranges[579:772])
-            dist_l = self.calc_avg(self.laser_subs_object.laser_ranges[772:963])
+        # print (self.laser_subs_object)
+        dist_r = self.calc_avg(self.laser_subs_object.laser_ranges[0:193])
+        dist_fr = self.calc_avg(self.laser_subs_object.laser_ranges[193:386])
+        dist_f = self.calc_avg(self.laser_subs_object.laser_ranges[386:579])
+        dist_fl = self.calc_avg(self.laser_subs_object.laser_ranges[579:772])
+        dist_l = self.calc_avg(self.laser_subs_object.laser_ranges[772:963])
 
-            self.save_data((dist_f))
+        self.save_data((dist_f))
 
-            self.update_flags(dist_f,dist_l,dist_r,dist_fl,dist_fr)
+        self.update_flags(dist_f,dist_l,dist_r,dist_fl,dist_fr)
 
     def update_speed(self):
         if self.flag_old != self.flag_new:
@@ -201,10 +195,23 @@ class JoystickProcessor(object):
         print("z: ", twist.angular.z)
         return twist
 
-def get_gui():
-    with open('eparams.pkl','rb') as handle:
-        settings = pickle.load(handle)
-    return settings
+def get_gui(data = None):
+    if data is None:
+        settings = {
+            "platform_stop_dist": 1.0,
+            "platform_clear_dist": 1.6,
+            "platform_normalSpeed": 0.2,
+            "platform_slowDownSpeed": 0.1
+        }
+        return settings
+    global lidar
+    global joystick
+    settings = json.loads(data)
+    try:
+        lidar.init_distance(settings)
+        joystick.init_speed(settings)
+    except:
+        pass
 
 def controllerCallback(data):
     global clamp
@@ -215,14 +222,17 @@ def controllerCallback(data):
         clamp = True
 
 if __name__ == '__main__':
-    rospy.init_node('base_scan')
-    app = QtWidgets.QApplication(sys.argv)
+    rospy.init_node('controller_joystick')
 
-    rospy.Subscriber('trigger_msgs', Int16, controllerCallback)
     clamp = True
     settings = get_gui()
+    global lidar
+    global joystick
     lidar = LidarProcessor(settings)
     joystick = JoystickProcessor(settings,lidar)
+
+    rospy.Subscriber('trigger_msgs', Int16, controllerCallback)
+    rospy.Subscriber('gui_settings', String, get_gui)
 
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():

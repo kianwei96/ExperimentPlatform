@@ -103,8 +103,8 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
        
         self.choose_rewards.addItem("")
         for file in os.listdir("RewardData"):
-                if file.endswith(".csv"):
-                        self.choose_rewards.addItem(file)
+            if file.endswith(".csv"):
+                self.choose_rewards.addItem(file)
         
         #self.choose_rewards.activated.connect(self.show_rewards)        
         #self.mod_rewards.clicked.connect(self.modify_rewards)
@@ -140,11 +140,13 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.results = {}
         self.combos = []
 
+        rospy.init_node('gui_selection', anonymous=True)
+        self.filename_publisher = rospy.Publisher('file_name', String, queue_size=1)
+        self.gui_settings_publisher = rospy.Publisher('gui_settings', String, queue_size=1)
+
     def set_rewards(self):
         if self.choose_rewards.currentText() != "":
-            publisher = rospy.Publisher('file_name', String, queue_size=1)
-            rospy.init_node('gui_selection', anonymous=True)
-            publisher.publish(self.choose_rewards.currentText())
+            self.filename_publisher.publish(self.choose_rewards.currentText())
         #reward_modifier.update_main(self.choose_rewards.currentText())
 
     def scale_reward_changed(self, int):
@@ -379,17 +381,15 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         exp_info = self.get_settings()
         main.target_preview(exp_info)
 
-    def get_settings(self, final):
+    def get_settings(self, final=0):
         
         today = datetime.date.today()
         d1 = today.strftime("%Y%m%d")
 
         if final == 1:
-            if not os.path.exists(d1):
-                os.makedirs(d1)
-            else:
+            if os.path.exists(d1):
                 shutil.rmtree(d1)
-                os.makedirs(d1)
+            os.makedirs(d1)
         
         subject = str(self.subject.text())
         session = int(self.session.text())
@@ -501,16 +501,18 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
                     "platform_stop_dist": platform_stop_dist,
                     "platform_clear_dist": platform_clear_dist,
                     "platform_normalSpeed": platform_normalSpeed,
-                    "platform_slowDownSpeed": platform_slowDownSpeed}
+                    "platform_slowDownSpeed": platform_slowDownSpeed
+                }
         return exp_info
 
 
     def start(self):
         exp_info = self.get_settings(1)
-        print "Starting experiment"
+        self.gui_settings_publisher.publish(str(exp_info))
+        print ("Starting experiment")
         #dump info
         with open('eparams.pkl','wb') as handle:
-                pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
         #call exp
         subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
         
