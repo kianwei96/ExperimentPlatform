@@ -101,22 +101,22 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.calibration_stimulus.activated.connect(self.set_calibration_image)
         self.manual_calibration.setChecked(False)
        
-	self.choose_rewards.addItem("")
-	for file in os.listdir("RewardData"):
-		if file.endswith(".csv"):
-			self.choose_rewards.addItem(file)
-	
-	#self.choose_rewards.activated.connect(self.show_rewards)	
-	#self.mod_rewards.clicked.connect(self.modify_rewards)
-	
-	self.choose_rewards.activated.connect(self.set_rewards)
+        self.choose_rewards.addItem("")
+        for file in os.listdir("RewardData"):
+                if file.endswith(".csv"):
+                        self.choose_rewards.addItem(file)
+        
+        #self.choose_rewards.activated.connect(self.show_rewards)        
+        #self.mod_rewards.clicked.connect(self.modify_rewards)
+        
+        self.choose_rewards.activated.connect(self.set_rewards)
 
         self.maze_numberOfTrials.setText("30")
         self.maze_angleTolerance.setText("90")
         self.maze_positionTolerance.setText("20") #in CM
         self.maze_destinationDuration.setText("2")
-	self.maze_rewardDuration.setText("10")
-	self.maze_penaltyDuration.setText("5")
+        self.maze_rewardDuration.setText("10")
+        self.maze_penaltyDuration.setText("5")
         self.maze_trialDuration.setText("120") #in Seconds
         self.maze_timeToStart.setText("5") #in Seconds
         self.maze_ITI_Min.setText("1")    #in Seconds
@@ -141,11 +141,11 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.combos = []
 
     def set_rewards(self):
-	if self.choose_rewards.currentText() != "":
-		publisher = rospy.Publisher('file_name', String, queue_size=1)
-		rospy.init_node('gui_selection', anonymous=True)
-		publisher.publish(self.choose_rewards.currentText())
-	#reward_modifier.update_main(self.choose_rewards.currentText())
+        if self.choose_rewards.currentText() != "":
+            publisher = rospy.Publisher('file_name', String, queue_size=1)
+            rospy.init_node('gui_selection', anonymous=True)
+            publisher.publish(self.choose_rewards.currentText())
+        #reward_modifier.update_main(self.choose_rewards.currentText())
 
     def scale_reward_changed(self, int):
         if self.scale_reward.isChecked():
@@ -347,12 +347,12 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
 
             #Maze
             #self.maze_rewardLocation.setText(str(exp_info.get("maze_rewardlocation", 3.0)))
-	    self.maze_numberOfTrials.setText(str(exp_info.get("maze_numberOfTrials", 3.0)))
+            self.maze_numberOfTrials.setText(str(exp_info.get("maze_numberOfTrials", 3.0)))
             self.maze_angleTolerance.setText(str(exp_info.get("maze_angleTolerance", 90)))
             self.maze_positionTolerance.setText(str(exp_info.get("maze_positionTolerance", 15)))
             self.maze_destinationDuration.setText(str(exp_info.get("maze_destinationDuration", 2.0)))
-	    self.maze_rewardDuration.setText(str(exp_info.get("maze_rewardDuration", 10.0)))
-	    self.maze_penaltyDuration.setText(str(exp_info.get("maze_penaltyDuration", 5.0)))
+            self.maze_rewardDuration.setText(str(exp_info.get("maze_rewardDuration", 10.0)))
+            self.maze_penaltyDuration.setText(str(exp_info.get("maze_penaltyDuration", 5.0)))
             self.maze_trialDuration.setText(str(exp_info.get("maze_trialDuration", 60.0)))
             self.maze_timeToStart.setText(str(exp_info.get("maze_timeToStart", 5.0)))
             self.maze_ITI_Min.setText(str(exp_info.get("maze_ITI_Min", 1.0)))
@@ -372,7 +372,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         if filename:
             exp_info = self.get_settings(0)
             print(str(filename[0]))
-	    json.dump(exp_info, open(str(filename[0])+'.txt',"w"))
+            json.dump(exp_info, open(str(filename[0])+'.txt',"w"))
             #json.dump(exp_info, open(filename, "w"))
 
     def show_target_preview(self):
@@ -384,14 +384,14 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         today = datetime.date.today()
         d1 = today.strftime("%Y%m%d")
 
-	if final == 1:
-	    if not os.path.exists(d1):
-	        os.makedirs(d1)
-	    else:
-	        shutil.rmtree(d1)
-	        os.makedirs(d1)
-	
-	subject = str(self.subject.text())
+        if final == 1:
+            if not os.path.exists(d1):
+                os.makedirs(d1)
+            else:
+                shutil.rmtree(d1)
+                os.makedirs(d1)
+        
+        subject = str(self.subject.text())
         session = int(self.session.text())
         droprate = float(self.droprate.text())
         screen_width = float(self.screen_width.text())
@@ -433,12 +433,12 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         maze_positionTolerance = float(self.maze_positionTolerance.text())
         maze_destinationDuration = float(self.maze_destinationDuration.text())
         maze_rewardDuration = float(self.maze_rewardDuration.text())
-	maze_penaltyDuration = float(self.maze_penaltyDuration.text())
-	maze_trialDuration = float(self.maze_trialDuration.text())
+        maze_penaltyDuration = float(self.maze_penaltyDuration.text())
+        maze_trialDuration = float(self.maze_trialDuration.text())
         maze_timeToStart = float(self.maze_timeToStart.text())
         maze_ITI_Min = float(self.maze_ITI_Min.text())
         maze_ITI_Max = float(self.maze_ITI_Max.text())
-	maze_rewardMap = str(self.choose_rewards.currentText())
+        maze_rewardMap = str(self.choose_rewards.currentText())
 
         # Platform stuff
         platform_clear_dist = float(self.platform_clear_dist.text())
@@ -451,7 +451,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         # increment the session counter for the next session
         self.session.setText(str(session+1))
         exp_info = {"sessionDate": d1,
-		    "subject": subject,
+                    "subject": subject,
                     "session": session,
                     "droprate": droprate,
                     "screen_width": screen_width,
@@ -486,14 +486,14 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
                     "calibration_stimulus": calibration_stimulus,
                     "manual_calibration": manual_calibration,
                     "allowed_combos": allowed_combos,
-		    "maze_rewardMap": maze_rewardMap,
+                    "maze_rewardMap": maze_rewardMap,
                     #"maze_rewardLocation": maze_rewardLocation,
                     "maze_numberOfTrials": maze_numberOfTrials,
                     "maze_angleTolerance": maze_angleTolerance,
                     "maze_positionTolerance" : maze_positionTolerance,
                     "maze_destinationDuration": maze_destinationDuration,
-		    "maze_rewardDuration": maze_rewardDuration,
-		    "maze_penaltyDuration": maze_penaltyDuration,
+                    "maze_rewardDuration": maze_rewardDuration,
+                    "maze_penaltyDuration": maze_penaltyDuration,
                     "maze_trialDuration": maze_trialDuration,
                     "maze_timeToStart": maze_timeToStart,
                     "maze_ITI_Min": maze_ITI_Min,
@@ -509,13 +509,11 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         exp_info = self.get_settings(1)
         print "Starting experiment"
         #dump info
-	with open('eparams.pkl','wb') as handle:
-		pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	#call exp
-        global controller_joystick_node
-        controller_joystick_node = subprocess.Popen(['cd ~/ExperimentPlatform && python controller_joystick.py'], shell = True)
-	subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
-	
+        with open('eparams.pkl','wb') as handle:
+                pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        #call exp
+        subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
+        
 
 if __name__ == "__main__":
     import sys 

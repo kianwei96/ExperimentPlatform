@@ -28,7 +28,7 @@ with open('eparams.pkl','rb') as handle:
 import os
 
 date_folder = exp_info["sessionDate"]
-shutil.copyfile('eparams.pkl', date_folder + '/eparams.pkl')
+shutil.move('eparams.pkl', date_folder + '/eparams.pkl')
 
 with open(os.devnull,'w') as fp:
 	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o posebag /amcl_pose /trigger_msgs __name:=my_bag'],shell=True,stdout=fp)
