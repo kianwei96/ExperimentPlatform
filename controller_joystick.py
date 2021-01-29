@@ -17,8 +17,7 @@ from std_msgs.msg import Int16, String
 from sensor_msgs.msg import Joy
 import time
 import os
-import pickle
-import json
+import ast
 
 class LaserSubs(object):
     laser_ranges = 0
@@ -206,12 +205,12 @@ def get_gui(data = None):
         return settings
     global lidar
     global joystick
-    settings = json.loads(data)
+    settings = ast.literal_eval(data.data)
     try:
         lidar.init_distance(settings)
         joystick.init_speed(settings)
-    except:
-        pass
+    except Exception as e:
+        print('Error:', e)
 
 def controllerCallback(data):
     global clamp
