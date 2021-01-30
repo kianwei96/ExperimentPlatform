@@ -1,6 +1,6 @@
 # Flutter monkey project
 Used flutter getting started as base
-
+Main code is in lib/main.dart
 
 
 ## Getting Started
