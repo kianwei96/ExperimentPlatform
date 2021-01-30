@@ -29,16 +29,21 @@ rosrun map_server map_saver -f <map_name>
 cd ~/ExperimentPlatform
 bash ros_launch.sh
 ```
-2. In another terminal window, navigate to `ExperimentPlatform` and run `exp_launch.sh` to run required python scripts that control experiment behavior.
+2. Start up the iOS app Runner on the iPhone. Then, in another terminal window, navigate to `ExperimentPlatform` and run `tcp_server` to allow the python script to control the app on the iPhone.
+```
+cd ~/ExperimentPlatform
+./tcp_server 8080 8081
+```
+3. In another terminal window, navigate to `ExperimentPlatform` and run `exp_launch.sh` to run required python scripts that control experiment behavior.
 ```
 cd ~/ExperimentPlatform
 bash exp_launch.sh
 ```
-3. In Rviz, get a good localization of the platform by using `P` to make a initial guess on position, and driving it around slightly
-4. In the GUI window that pops up, Select the reward map under the `Reward Locations` drop-down list
-5. To modify the reward map, use the `G` key in Rviz to redefine the 6 poster locations/directions (click and drag), with FIFO overriding
-6. Load or modify other experiment settings, and save the settings if you wish
-7. Press `Start`
+4. In Rviz, get a good localization of the platform by using `P` to make a initial guess on position, and driving it around slightly
+5. In the GUI window that pops up, Select the reward map under the `Reward Locations` drop-down list
+6. To modify the reward map, use the `G` key in Rviz to redefine the 6 poster locations/directions (click and drag), with FIFO overriding
+7. Load or modify other experiment settings, and save the settings if you wish
+8. Press `Start`
 
 Rviz will now display current goal. In the new window that pops up, you can monitor the experiment progress and intervene as required. To intervene, press `P` to toggle Pause behavior. Note that the experiment will only pause at the end of the current trial. Once end of trial is reached with the Pause option, use `R` to resume the experiment, or `T` followed by `Y` to terminate the entire experiment. Do NOT quit the experiment by any other method (eg. closing the window) as that will cause some ROS data to be recorded continuously. See below for remedy. 
 
