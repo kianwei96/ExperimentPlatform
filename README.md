@@ -29,11 +29,7 @@ rosrun map_server map_saver -f <map_name>
 cd ~/ExperimentPlatform
 bash ros_launch.sh
 ```
-2. Start up the iOS app Runner on the iPhone. Then, in another terminal window, navigate to `ExperimentPlatform` and run `tcp_server` to allow the python script to control the app on the iPhone.
-```
-cd ~/ExperimentPlatform
-./tcp_server 8080 8081
-```
+2. Start up the iOS app Runner on the iPhone. 
 3. In another terminal window, navigate to `ExperimentPlatform` and run `exp_launch.sh` to run required python scripts that control experiment behavior.
 ```
 cd ~/ExperimentPlatform
