@@ -13,10 +13,12 @@ from std_msgs.msg import Int16
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PointStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import rospy
 import pickle
 import shutil
 import subprocess
+import math
 
 with open('eparams.pkl','rb') as handle:
 	exp_info = pickle.load(handle)
@@ -31,8 +33,6 @@ shutil.move('eparams.pkl', date_folder + '/eparams.pkl')
 with open(os.devnull,'w') as fp:
 	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o posebag /amcl_pose /trigger_msgs __name:=my_bag'],shell=True,stdout=fp)
 	subprocess.Popen(['cd ~/ExperimentPlatform/' + str(date_folder) + '&& rosbag record -o triggerbag /trigger_msgs __name:=my_bag2'],shell=True,stdout=fp)
-
-resolution = 0.025000 # meters per cell
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -103,7 +103,7 @@ while len(full_targets) < num_trials:
 	reward_sequence = np.arange(poster_count)
 	reward_sequence = np.squeeze(np.transpose(np.matlib.repmat(reward_sequence, 1, 5)))
 	while True:
-    		np.random.shuffle(reward_sequence)
+		np.random.shuffle(reward_sequence)
 		evaluation = np.diff(np.transpose(reward_sequence)) == 0
 		if not evaluation.any():
 			break
@@ -117,9 +117,48 @@ targets = full_targets.tolist()
 
 # setting up communication methods
 
-target_location = [0, 0]
+target_location = [0, 0, 0]
 
-#print('ok')
+'''
+Check if alpha is between theta and beta (all in degrees)
+'''
+def is_angle_between(alpha, theta, beta):
+    while( math.fabs(beta - alpha) > 180 ):
+        if(beta > alpha):
+            alpha += 360
+        else:
+            beta += 360
+
+
+    # Here I replace alpha with beta if alpha is bigger to keep things consistent
+    # You can choose the bigger angle however you please
+    if(alpha > beta):
+        phi = alpha
+        alpha = beta
+        beta = phi
+
+    threeSixtyMultiple = (beta - theta)//360;
+    theta += 360*threeSixtyMultiple
+
+    return (alpha < theta) and (theta < beta)
+
+def reached_target_location(data):
+    (roll, pitch, angle) = euler_from_quaternion([data.pose.pose.orientation.x,
+                                                  data.pose.pose.orientation.y, 
+                                                  data.pose.pose.orientation.z, 
+                                                  data.pose.pose.orientation.w])
+    angle = math.degrees(angle)
+    x = data.pose.pose.position.x
+    y = data.pose.pose.position.y
+    has_reached_position =  (target_location[0] - x)**2 + \
+                            (target_location[1] - y)**2 < (pos_tol/100)**2 # to meters
+    convert_angle = lambda angle: angle - angle//(360)*(360)
+    target_a = math.degrees(math.atan2((target_location[1]-y),(target_location[0]-x)))
+    has_faced_target = is_angle_between(convert_angle(angle - angle_tol),
+    									convert_angle(math.degrees(target_location[2]))+180,
+    									convert_angle(angle + angle_tol))
+    print(has_reached_position, has_faced_target)
+    return has_reached_position and has_faced_target
 
 def positionParser(data):
 	
@@ -139,7 +178,7 @@ def positionParser(data):
 
 	pos_saver.append([dts, data.pose.pose.position.x, data.pose.pose.position.y, sum([i**2 for i in data.pose.covariance])])
 
-	if (target_location[0] - data.pose.pose.position.x)**2 + (target_location[1] - data.pose.pose.position.y)**2 < 1:		
+	if reached_target_location(data):		
 		if zone_entered == -1:
 			zone_entered = master_timer.getTime()
 	else:
@@ -184,7 +223,7 @@ try:
 	pt.point.y = float(poster_locations[targets[curr_target]][1])
 	pt.point.z = 0
 	marker.publish(pt)
-	target_location = [pt.point.x, pt.point.y]
+	target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 	pos_saver = []
 	zone_entered = -1
 
@@ -233,7 +272,7 @@ try:
 				pt.point.y = float(poster_locations[targets[curr_target]][1])
 				pt.point.z = 0
 				marker.publish(pt)
-				target_location = [pt.point.x, pt.point.y]
+				target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 				mini_timer = core.MonotonicClock()
 				if status == "Pausing":
 					status = "Paused"
@@ -277,7 +316,7 @@ try:
 					pt.point.y = float(poster_locations[targets[curr_target]][1])
 					pt.point.z = 0
 					marker.publish(pt)
-					target_location = [pt.point.x, pt.point.y]
+					target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 					mini_timer = core.MonotonicClock()
 					if status == "Pausing":
 						status = "Paused"
@@ -292,7 +331,7 @@ try:
 				pt.point.y = float(poster_locations[targets[curr_target]][1])
 				pt.point.z = 0
 				marker.publish(pt)
-				target_location = [pt.point.x, pt.point.y]
+				target_location = [pt.point.x, pt.point.y, float(poster_locations[targets[curr_target]][2])]
 			if mini_timer.getTime() > inter_trial_duration:
 				phase = "Cue Up"
 				message = Int16()

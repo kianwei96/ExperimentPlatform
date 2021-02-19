@@ -23,13 +23,13 @@ class Reward:
         if self.port is not None:
             self.port.setRTS(1)
         else:
-            print "Reward port open"
+            print ("Reward port open")
 
     def close(self):
         if self.port is not None:
             self.port.setRTS(0)
         else:
-            print "Reward port closed"
+            print ("Reward port closed")
 
     def deliver(self, duration=None):
         if duration is None:
