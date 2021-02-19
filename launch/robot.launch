@@ -1,0 +1,8 @@
+<launch>
+	<!-- Run rosaria -->
+	<node name="RosAria" pkg="rosaria" type="RosAria">
+	<param name ="TicksMM" value="120" />
+	<param name ="RevCount" value="24750" />
+	<param name="port" value="/dev/ttyUSB1" />
+</node>
+</launch>
