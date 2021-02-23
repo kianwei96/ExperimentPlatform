@@ -18,7 +18,12 @@ def main(edffile='test.edf',
     win.setUnits('pix')
 
     # create a visual stimulus for the dots
-    dot = visual.Circle(win, 50.0)
+    dot = visual.Circle(win, radius=50.0,
+                        fillColor="white",
+                        lineColor="white", 
+                        units='pix',
+                        fillColorSpace='rgb',
+                        lineColorSpace='rgb')
     margins = [0.1*screen_width, 0.1*screen_height]
     xmin = margins[0]
     xmax = screen_width - margins[0]
