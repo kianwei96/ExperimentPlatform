@@ -1,11 +1,16 @@
 import eyelink
 from psychopy import visual, core
+import rospy
+import pickle
 
 def main(edffile='test.edf',
          screen_width=800,
          screen_height=600,
          full_screen=True,
          dot_duration=1.0):
+    # read set up
+    with open('eparams.pkl','rb') as handle:
+	    exp_info = pickle.load(handle)
 
     # create a window
     win = visual.Window(
@@ -24,16 +29,12 @@ def main(edffile='test.edf',
                         units='pix',
                         fillColorSpace='rgb',
                         lineColorSpace='rgb')
-    margins = [0.1*screen_width, 0.1*screen_height]
-    xmin = margins[0]
-    xmax = screen_width - margins[0]
-    ymin = margins[1]
-    ymax = screen_height - margins[1]
-    dot_pos = [(xmin, ymin),
-               (xmin, ymax),
-               (xmax, ymax),
-               (xmax, ymin)]
-    print(dot_pos)
+    margins = [0.9*win.size[0], 0.9*win.size[1]]
+    dot_pos =   [   
+                    (-margins[0], -margins[1]), (0, -margins[1]), (margins[0], -margins[1]),
+                    (-margins[0],           0), (0,           0), (margins[0],           0),
+                    (-margins[0],  margins[1]), (0,  margins[1]), (margins[0],  margins[1])
+                ]
     
     # keep track of time
     clock = core.Clock()
@@ -46,14 +47,14 @@ def main(edffile='test.edf',
    
     idx = 0
     clock.reset()
-    win.callOnFlip(lambda: tracker.send_message('dot pos: {}'.format(dot.pos)))
+    win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
     while True:
         dot.pos = dot_pos[idx]
         dot.draw()
         if clock.getTime() > dot_duration:
             idx += 1
             clock.reset()
-            win.callOnFlip(lambda: tracker.send_message('dot pos: {}'.format(dot.pos)))
+            win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
 
         if idx >= len(dot_pos):
             break
