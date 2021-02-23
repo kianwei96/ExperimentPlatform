@@ -6,12 +6,12 @@ import pickle
 def main(edffile='test.edf',
          screen_width=800,
          screen_height=600,
-         full_screen=True,
+         full_screen=False,
          dot_duration=1.0):
     # read set up
-    with open('eparams.pkl','rb') as handle:
-	    exp_info = pickle.load(handle)
-
+    # with open('eparams.pkl','rb') as handle:
+	#     exp_info = pickle.load(handle)
+    rospy.init_node("eyelink_sync")
     # create a window
     win = visual.Window(
         size=(screen_width, screen_height), fullscr=full_screen, screen=0,
@@ -23,13 +23,13 @@ def main(edffile='test.edf',
     win.setUnits('pix')
 
     # create a visual stimulus for the dots
-    dot = visual.Circle(win, radius=50.0,
+    dot = visual.Circle(win, radius=30.0,
                         fillColor="white",
                         lineColor="white", 
                         units='pix',
                         fillColorSpace='rgb',
                         lineColorSpace='rgb')
-    margins = [0.9*win.size[0], 0.9*win.size[1]]
+    margins = [0.8*win.size[0]//2, 0.8*win.size[1]//2]
     dot_pos =   [   
                     (-margins[0], -margins[1]), (0, -margins[1]), (margins[0], -margins[1]),
                     (-margins[0],           0), (0,           0), (margins[0],           0),
