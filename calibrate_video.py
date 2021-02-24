@@ -2,14 +2,14 @@ import eyelink
 from psychopy import visual, core
 import rospy
 import pickle
-from numpy.random import seed, shuffle
+from random import seed, shuffle
 from datetime import datetime
 
 def main(edffile='test.edf',
          screen_width=800,
          screen_height=600,
-         full_screen=False,
-         dot_duration=1.0, 
+         full_screen=True,
+         dot_duration=2.0, 
          is_random_point=True):
     # read set up
     # with open('eparams.pkl','rb') as handle:
@@ -47,8 +47,8 @@ def main(edffile='test.edf',
 
     # start the recording
     tracker.start_recording()
-   
-    idx = 0
+    tracker.send_message('Start Trial {}'.format(rospy.get_time()))
+    idx = 00
 
     if is_random_point:
         seed(datetime.now())
