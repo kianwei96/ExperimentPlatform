@@ -2,12 +2,15 @@ import eyelink
 from psychopy import visual, core
 import rospy
 import pickle
+from random import seed, shuffle
+from datetime import datetime
 
 def main(edffile='test.edf',
          screen_width=800,
          screen_height=600,
          full_screen=False,
-         dot_duration=1.0):
+         dot_duration=1.0, 
+         is_random_point=True):
     # read set up
     # with open('eparams.pkl','rb') as handle:
 	#     exp_info = pickle.load(handle)
@@ -46,6 +49,11 @@ def main(edffile='test.edf',
     tracker.start_recording()
    
     idx = 0
+
+    if is_random_point:
+        seed(datetime.now())
+        shuffle(dot_pos)
+
     clock.reset()
     win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
     while True:
@@ -59,6 +67,9 @@ def main(edffile='test.edf',
         if idx >= len(dot_pos):
             break
             # idx=0
+            # if is_random_point:
+            #     seed(datetime.now())
+            #     shuffle(dot_pos)
         
         win.flip()
     
