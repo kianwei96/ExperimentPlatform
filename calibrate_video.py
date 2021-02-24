@@ -2,7 +2,7 @@ import eyelink
 from psychopy import visual, core
 import rospy
 import pickle
-from random import seed, shuffle
+from numpy.random import seed, shuffle
 from datetime import datetime
 
 def main(edffile='test.edf',
