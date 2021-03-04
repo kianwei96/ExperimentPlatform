@@ -57,7 +57,7 @@ def main(edffile='test.edf',
     clock.reset()
     win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
     while True:    
-        if idx >= len(dot_pos):
+        if idx > len(dot_pos):
             break
             # idx=0
             # if is_random_point:
