@@ -56,20 +56,19 @@ def main(edffile='test.edf',
 
     clock.reset()
     win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
-    while True:
-        dot.pos = dot_pos[idx]
-        dot.draw()
-        if clock.getTime() > dot_duration:
-            idx += 1
-            clock.reset()
-            win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
-
+    while True:    
         if idx >= len(dot_pos):
             break
             # idx=0
             # if is_random_point:
             #     seed(datetime.now())
             #     shuffle(dot_pos)
+        dot.pos = dot_pos[idx]
+        dot.draw()
+        if clock.getTime() > dot_duration:
+            idx += 1
+            clock.reset()
+            win.callOnFlip(lambda: tracker.send_message('dot pos: {}, time: {}'.format(dot.pos, rospy.get_time())))
         
         win.flip()
     
