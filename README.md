@@ -81,6 +81,10 @@ rostopic echo <topic_name> -b <bag_file>.bag > <csv_file>.csv
 
 ### Eyelink
 1. Eyelink Calibration is done via [this](https://github.com/grero/EyelinkCalibration)
+```
+# in `powerbot` terminal
+cd ~/EyelinkCalibration/EyelinkCalibration && python main_gui.py
+```
 2. run calibrate_video.py after successful calibration for set 1 experiment
 3. super-position results can be found [here](https://github.com/ndhuu/fyp_result/blob/main/eyelink.ipynb). This is slightly different from Matlab version (using 'v4' griddata, wherease python's griddata does not have 'v4', hence failed for extrapolation)
 
