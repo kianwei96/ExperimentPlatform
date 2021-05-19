@@ -63,6 +63,28 @@ Experimental data will be stored in a folder named as the current date. A brief 
 * **rostrig.csv** - trigger values, with ROS timings
 * **pose_bag???-??-??-??-??-??.bag** - rosbag data file, parent of rostrig.csv
 
+### Recording of full experiments
+1. save bag file with 
+```
+rosbag record -a -o data.bag -x “/RosAria/*”
+```
+2. playback the rosbag file
+```
+ros set use_sim_time true && rosrun rviz rviz -d rviz_config/default.rviz
+# in another terminal
+rosbag play <bag_file>.bag
+```
+3. convert to csv file
+```
+rostopic echo <topic_name> -b <bag_file>.bag > <csv_file>.csv
+```
+
+### Eyelink
+1. Eyelink Calibration is done via [this](https://github.com/grero/EyelinkCalibration)
+2. run calibrate_video.py after successful calibration for set 1 experiment
+3. super-position results can be found [here](https://github.com/ndhuu/fyp_result/blob/main/eyelink.ipynb). This is slightly different from Matlab version (using 'v4' griddata, wherease python's griddata does not have 'v4', hence failed for extrapolation)
+
+
 ### For Developers
 
 Please refer to [Developer's Guide](../../wiki/Developer's-Guide)
