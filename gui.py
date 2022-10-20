@@ -44,6 +44,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.start_button.clicked.connect(self.start)
         #self.maze_startButton.clicked.connect(self.maze_start)
         self.load_button.clicked.connect(self.load)
+        self.stop_button.clicked.connect(self.stop)
         
         #RewardLocationCSV = '/home/sinapse/Desktop/MonkeyGUI-master/RewardData/rewardlocations.csv'
         #Rewardlocation = [[0, 0], [0, 0]] #pd.read_csv(RewardLocationCSV, index_col=0)
@@ -67,6 +68,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fixation_buffer.setText("0.0")
         self.eyespot.setChecked(False)
         self.use_dummy.setChecked(True)
+        self.use_eyelink.setChecked(False)
         self.calibrate.setChecked(True)
         self.play_sound.setChecked(True)
         self.block_report.setChecked(False)
@@ -112,8 +114,8 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.choose_rewards.activated.connect(self.set_rewards)
 
         self.maze_numberOfTrials.setText("30")
-        self.maze_angleTolerance.setText("90")
-        self.maze_positionTolerance.setText("20") #in CM
+        self.maze_angleTolerance.setText("89")
+        self.maze_positionTolerance.setText("100") #in CM
         self.maze_destinationDuration.setText("2")
         self.maze_rewardDuration.setText("10")
         self.maze_penaltyDuration.setText("5")
@@ -123,8 +125,8 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         self.maze_ITI_Max.setText("3")   #in Seconds
 
         # platform stuff
-        self.platform_clear_dist.setText("1.6") #need convert to metres default 1.2 [1.6 = 80cm slow]
-        self.platform_stop_dist.setText("1.0")  #need convert to metres default 0.7 [1.0 = 60cm stop]
+        self.platform_clear_dist.setText("1.5") #need convert to metres default 1.2 [1.6 = 80cm slow]
+        self.platform_stop_dist.setText("0.5")  #need convert to metres default 0.7 [1.0 = 60cm stop]
         self.platform_slowDownSpeed.setText("0.1") 
         self.platform_normalSpeed.setText("0.2")
 
@@ -248,6 +250,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
             self.calculate_flowrate()
             self.exp_plot.setChecked(exp_info.get("exp_plot", False))
             self.use_dummy.setChecked(exp_info.get("use_dummy", True))
+            self.use_eyelink.setChecked(exp_info.get("use_eyelink", True))
             self.eyespot.setChecked(exp_info.get("draw_eyespot", True))
             self.screen_width.setText(str(exp_info.get("screen_width", 1680)))
             self.screen_height.setText(str(exp_info.get("screen_height", 1080)))
@@ -350,7 +353,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
             #Maze
             #self.maze_rewardLocation.setText(str(exp_info.get("maze_rewardlocation", 3.0)))
             self.maze_numberOfTrials.setText(str(exp_info.get("maze_numberOfTrials", 3.0)))
-            self.maze_angleTolerance.setText(str(exp_info.get("maze_angleTolerance", 90)))
+            self.maze_angleTolerance.setText(str(exp_info.get("maze_angleTolerance", 89)))
             self.maze_positionTolerance.setText(str(exp_info.get("maze_positionTolerance", 15)))
             self.maze_destinationDuration.setText(str(exp_info.get("maze_destinationDuration", 2.0)))
             self.maze_rewardDuration.setText(str(exp_info.get("maze_rewardDuration", 10.0)))
@@ -412,6 +415,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         fixsize = float(self.fixation_size.text())
         fix_window = float(self.fixation_window.text())
         use_dummy = self.use_dummy.isChecked()
+        use_eyelink = self.use_eyelink.isChecked()
         play_sound = self.play_sound.isChecked()
         block_report = self.block_report.isChecked()
         use_eyespot = self.eyespot.isChecked()
@@ -475,6 +479,7 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
                     "mask_params": self.mask_params,
                     "draw_eyespot": use_eyespot,
                     "use_dummy": use_dummy,
+                    "use_eyelink": use_eyelink,
                     "play_sound": play_sound,
                     "block_report": block_report,
                     "calibrate": calibrate,
@@ -514,7 +519,21 @@ class Main(QtWidgets.QMainWindow, Ui_MainWindow):
         with open('eparams.pkl','wb') as handle:
             pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
         #call exp
-        subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment.py'])
+        subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment_Sam.py'])
+
+    def stop(self):
+        # exp_info = self.get_settings(1)
+        # self.gui_settings_publisher.publish(str(exp_info))
+        # print ("Starting experiment")
+        # #dump info
+        # with open('eparams.pkl','wb') as handle:
+        #     pickle.dump(exp_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # #call exp
+        # subprocess.call(['xterm', '-e', 'cd ~/ExperimentPlatform && python Experiment_Sam.py'])
+        pub = rospy.Publisher('RosAria/cmd_vel', Twist, queue_size=1)
+        print ("force stop")
+        twist = Twist() # force stop if needed
+        pub.publish(twist)
         
 
 if __name__ == "__main__":

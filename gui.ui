@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>470</width>
+    <width>600</width>
     <height>402</height>
    </rect>
   </property>
@@ -37,6 +37,19 @@
     </property>
     <property name="text">
      <string>Start</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="stop_button">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>330</y>
+      <width>110</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stop</string>
     </property>
    </widget>
    <widget class="QTabWidget" name="calibration_tab_2">
@@ -241,6 +254,22 @@ border-radius: 5px;
       <property name="text">
        <string/>
       </property>
+      </widget>
+     <widget class="QCheckBox" name="use_eyelink">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>260</y>
+        <width>20</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Whether to use Eyelink</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
      </widget>
      <widget class="QLabel" name="label_4">
       <property name="geometry">
@@ -254,6 +283,19 @@ border-radius: 5px;
       <property name="text">
        <string>Use dummy:</string>
       </property>
+     </widget>
+     <widget class="QLabel" name="label_58">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>260</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Use Eyelink:</string>
+      </property> 
      </widget>
      <widget class="QLabel" name="label_6">
       <property name="geometry">
@@ -1404,7 +1446,7 @@ border-radius: 5px</string>
      <attribute name="title">
       <string>Platform</string>
      </attribute>
-     <widget class="QLineEdit" name="platform_clear_dist">
+     <widget class="QLineEdit" name="platform_stop_dist">
       <property name="geometry">
        <rect>
         <x>190</x>
@@ -1424,7 +1466,7 @@ border-radius: 5px</string>
 border-radius: 5px</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="platform_stop_dist">
+     <widget class="QLineEdit" name="platform_clear_dist">
       <property name="geometry">
        <rect>
         <x>190</x>
@@ -2387,6 +2429,7 @@ border-radius: 5px</string>
   <tabstop>eyespot</tabstop>
   <tabstop>calibrate</tabstop>
   <tabstop>use_dummy</tabstop>
+  <tabstop>use_eyelink</tabstop>
   <tabstop>calibration_tab_2</tabstop>
   <tabstop>fixation_criterion</tabstop>
   <tabstop>fixation_window</tabstop>
