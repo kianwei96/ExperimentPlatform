@@ -46,7 +46,9 @@ bash exp_launch.sh
 8. Load or modify other experiment settings, and save the settings if you wish
 9. Press `Start`
 
-Rviz will now display current goal. In the new window that pops up, you can monitor the experiment progress and intervene as required. To intervene, press `P` to toggle Pause behavior. Note that the experiment will only pause at the end of the current trial. Once end of trial is reached with the Pause option, use `R` to resume the experiment, or `T` followed by `Y` to terminate the entire experiment. Do NOT quit the experiment by any other method (eg. closing the window) as that will cause some ROS data to be recorded continuously. See below for remedy. 
+Rviz will now display current goal. In the new window that pops up, you can monitor the experiment progress and intervene as required. 
+There are mainly 4 phases (Pre Trial Interval, Start Trial, Cue Offset, Reward/Timeout) that you will encounter during each trial. Only at Cue Offset the robot will not be programmically unclamped and it is a cue for you to move the robot.
+To intervene, press `P` to toggle Pause behavior. Note that the experiment will only pause at the end of the current trial. Once end of trial is reached with the Pause option, use `R` to resume the experiment, or `T` followed by `Y` to terminate the entire experiment. At Paused and the first phase of Terminate (when `T` is first pressed), the robot will go into clamp mode if it was in a moving mode previously. This is to prevent any unwanted movement and can be used in emergency cases. Do NOT quit the experiment by any other method (eg. closing the window) as that will cause some ROS data to be recorded continuously. See below for remedy. 
 
 If the program exits ungracefully, open a new window and run
 ```
@@ -92,6 +94,10 @@ cd ~/EyelinkCalibration/EyelinkCalibration && python main_gui.py
 ```
 2. run calibrate_video.py after successful calibration for set 1 experiment
 3. super-position results can be found [here](https://github.com/ndhuu/fyp_result/blob/main/eyelink.ipynb). This is slightly different from Matlab version (using 'v4' griddata, wherease python's griddata does not have 'v4', hence failed for extrapolation)
+4. After calibration is done, you can physically place markers in md2 maze room to denote as the reward locations. You will then need to modify the reward locations in rviz to match the ones you placed. You can check with the researchers in md2 as to where the fixed reward locations will be at.
+5. Ensure the eyelink checkbox is marked in the GUI to enable eyelink for the experiment
+6. Follow the trial phases and rewards and look at the markers at each reward locations. Make sure your eye is being detected properly by the eyelink computer. It should be marked as green in the eyelink computer if it is detected correctly.
+7. After the whole experiment is done, the robot will save the eyelink data file (.edf) in /data folder
 
 
 ### For Developers
