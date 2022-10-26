@@ -105,4 +105,7 @@ cd ~/EyelinkCalibration/EyelinkCalibration && python main_gui.py
 Please refer to [Developer's Guide](../../wiki/Developer's-Guide)
  for breakdown of how the python scripts interact. Possible features and suggestions will also be listed there.
 
+### For Localisation Testing
+
+Please refer to `Localisation_README.md` for more information and guide
 
